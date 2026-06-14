@@ -20,6 +20,13 @@ def run():
     #velocidade da bola
     ball_speed_x, ball_speed_y = ball_speed, ball_speed
     player1_delta, player2_delta = 0, 0
+    
+    #pontuação dos times
+    score_p1 = 0
+    score_p2 = 0
+    
+    #fonte para exibir pontuação
+    font = pygame.font.Font(None, 74)
 
     clock = pygame.time.Clock()
 
@@ -63,8 +70,25 @@ def run():
         #Quando a bola bater em alguma extremidade ela ricocheteia 
         if bateu_em_cima_ou_embaixo(ball.top, ball.bottom, screen_height):
             ball_speed_y = inverter(ball_speed_y)
-        if bateu_nas_laterais(ball.left, ball.right, screen_width):
-            ball_speed_x = inverter(ball_speed_x)
+        
+        # Detectar se a bola saiu pelas laterais (sem bater no player)
+        if ball.left <= 0:
+            # Bola saiu pela esquerda - player2 ganha ponto
+            score_p2 += 1
+            ball.x = screen_width//2-ball_radius
+            ball.y = screen_height//2-ball_radius
+            ball_speed_x = ball_speed
+            ball_speed_y = ball_speed
+        elif ball.right >= screen_width:
+            # Bola saiu pela direita - player1 ganha ponto
+            score_p1 += 1
+            ball.x = screen_width//2-ball_radius
+            ball.y = screen_height//2-ball_radius
+            ball_speed_x = -ball_speed
+            ball_speed_y = ball_speed
+        else:
+            if bateu_nas_laterais(ball.left, ball.right, screen_width):
+                ball_speed_x = inverter(ball_speed_x)
 
         if bateu_no_jogador(ball, player1) or bateu_no_jogador(ball, player2):
             ball_speed_x = inverter(ball_speed_x)
@@ -76,5 +100,11 @@ def run():
         pygame.draw.rect(screen, prop_color, player1)
         pygame.draw.rect(screen, prop_color, player2)
         gfxdraw.filled_circle(screen, ball.centerx, ball.centery, ball_radius, prop_color)
+        
+        # Exibir pontuação na tela
+        score_text = font.render(f"{score_p1}  {score_p2}", True, prop_color)
+        score_rect = score_text.get_rect(center=(screen_width//2, 100))
+        screen.blit(score_text, score_rect)
+        
         pygame.display.update()
         clock.tick(fps)
