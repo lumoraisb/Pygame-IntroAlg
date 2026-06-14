@@ -5,12 +5,62 @@ from src.config import bg_color, prop_color, ball_radius, player_width, player_h
 from src.funcoes import inverter, bateu_em_cima_ou_embaixo, bateu_nas_laterais, limitar_jogador, bateu_no_jogador
 
 
+def tela_inicio(screen, screen_width, screen_height):
+    """Exibe a tela de início com botão Iniciar"""
+    font_title = pygame.font.Font(None, 100)
+    font_button = pygame.font.Font(None, 50)
+    
+    # Criar botão Iniciar
+    button_width, button_height = 300, 100
+    button_x = (screen_width - button_width) // 2
+    button_y = (screen_height - button_height) // 2
+    button_rect = pygame.Rect(button_x, button_y, button_width, button_height)
+    
+    menu_ativo = True
+    while menu_ativo:
+        mouse_pos = pygame.mouse.get_pos()
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_rect.collidepoint(mouse_pos):
+                    menu_ativo = False
+        
+        # Desenhar tela de início
+        screen.fill(bg_color)
+        
+        # Título
+        title_text = font_title.render("PONG", True, prop_color)
+        title_rect = title_text.get_rect(center=(screen_width//2, 200))
+        screen.blit(title_text, title_rect)
+        
+        # Botão Iniciar
+        button_color = pygame.Color("#ff6b6b") if button_rect.collidepoint(mouse_pos) else prop_color
+        pygame.draw.rect(screen, button_color, button_rect)
+        pygame.draw.rect(screen, prop_color, button_rect, 3)
+        
+        button_text = font_button.render("Iniciar", True, bg_color)
+        button_text_rect = button_text.get_rect(center=button_rect.center)
+        screen.blit(button_text, button_text_rect)
+        
+        pygame.display.update()
+
+
 def run():
     pygame.init()
     #tamanho da janela do app
     display_info = pygame.display.Info()
     screen_width, screen_height = display_info.current_w, display_info.current_h
     screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)
+
+    # Exibir tela de início
+    tela_inicio(screen, screen_width, screen_height)
 
     #posicionamento inicial da bola, player1 e player2
     ball = pygame.Rect(screen_width//2-ball_radius, screen_height//2-ball_radius, ball_radius*2, ball_radius*2)
