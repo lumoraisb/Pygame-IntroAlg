@@ -3,30 +3,72 @@ from pygame import gfxdraw
 
 from src.config import bg_color, prop_color, ball_radius, player_width, player_height, ball_speed, player_speed, fps
 from src.funcoes import inverter, bateu_em_cima_ou_embaixo, bateu_nas_laterais, limitar_jogador, bateu_no_jogador
+from src.dados import salvar_partida, carregar_historico
+
+
+#exibe as últimas 10 partidas salvas
+def tela_historico(screen, screen_width, screen_height):
+    font_title = pygame.font.Font(None, 80)
+    font_item = pygame.font.Font(None, 45)
+    font_info = pygame.font.Font(None, 40)
+    clock = pygame.time.Clock()
+
+    #carrega as últimas 10 partidas do arquivo de histórico
+    partidas = carregar_historico()
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                return
+
+        screen.fill(bg_color)
+
+        title_text = font_title.render("HISTÓRICO", True, prop_color)
+        screen.blit(title_text, title_text.get_rect(center=(screen_width // 2, 100)))
+
+        #exibe mensagem caso não haja partidas registradas
+        if not partidas:
+            msg = font_info.render("Nenhuma partida registrada.", True, prop_color)
+            screen.blit(msg, msg.get_rect(center=(screen_width // 2, screen_height // 2)))
+        else:
+            for i, linha in enumerate(partidas):
+                texto = font_item.render(linha, True, prop_color)
+                screen.blit(texto, texto.get_rect(center=(screen_width // 2, 200 + i * 55)))
+
+        voltar = font_info.render("Pressione qualquer tecla para voltar", True, pygame.Color("#ff6b6b"))
+        screen.blit(voltar, voltar.get_rect(center=(screen_width // 2, screen_height - 60)))
+
+        pygame.display.update()
+        clock.tick(fps)
 
 
 def tela_selecao_modo(screen, screen_width, screen_height):
     font_title = pygame.font.Font(None, 100)
     font_button = pygame.font.Font(None, 50)
     font_info = pygame.font.Font(None, 40)
-    
-    # Criar botões
+
     button_width, button_height = 300, 100
     button_spacing = 100
-    
+
     button_3_x = (screen_width // 2) - button_width - (button_spacing // 2)
     button_5_x = (screen_width // 2) + (button_spacing // 2)
     button_y = (screen_height - button_height) // 2
-    
+
     button_3_rect = pygame.Rect(button_3_x, button_y, button_width, button_height)
     button_5_rect = pygame.Rect(button_5_x, button_y, button_width, button_height)
-    
+
+    hist_width, hist_height = 260, 70
+    hist_rect = pygame.Rect((screen_width - hist_width) // 2, button_y + button_height + 60, hist_width, hist_height)
+
     selecionado = None
     menu_ativo = True
-    
+
     while menu_ativo:
         mouse_pos = pygame.mouse.get_pos()
-        
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -42,38 +84,37 @@ def tela_selecao_modo(screen, screen_width, screen_height):
                 elif button_5_rect.collidepoint(mouse_pos):
                     selecionado = 5
                     menu_ativo = False
-        
-        # Desenhar tela de seleção
+                elif hist_rect.collidepoint(mouse_pos):
+                    tela_historico(screen, screen_width, screen_height)
+
         screen.fill(bg_color)
-        
-        # Título
+
         title_text = font_title.render("PONG", True, prop_color)
-        title_rect = title_text.get_rect(center=(screen_width//2, 150))
-        screen.blit(title_text, title_rect)
-        
-        # Subtítulo
+        screen.blit(title_text, title_text.get_rect(center=(screen_width // 2, 150)))
+
         subtitle_text = font_info.render("Escolha o modo de jogo", True, prop_color)
-        subtitle_rect = subtitle_text.get_rect(center=(screen_width//2, 300))
-        screen.blit(subtitle_text, subtitle_rect)
-        
-        # Botão Melhor de 3
+        screen.blit(subtitle_text, subtitle_text.get_rect(center=(screen_width // 2, 300)))
+
         button_3_color = pygame.Color("#ff6b6b") if button_3_rect.collidepoint(mouse_pos) else prop_color
         pygame.draw.rect(screen, button_3_color, button_3_rect)
         pygame.draw.rect(screen, prop_color, button_3_rect, 3)
         button_3_text = font_button.render("Melhor de 3", True, bg_color)
-        button_3_text_rect = button_3_text.get_rect(center=button_3_rect.center)
-        screen.blit(button_3_text, button_3_text_rect)
-        
-        # Botão Melhor de 5
+        screen.blit(button_3_text, button_3_text.get_rect(center=button_3_rect.center))
+
         button_5_color = pygame.Color("#ff6b6b") if button_5_rect.collidepoint(mouse_pos) else prop_color
         pygame.draw.rect(screen, button_5_color, button_5_rect)
         pygame.draw.rect(screen, prop_color, button_5_rect, 3)
         button_5_text = font_button.render("Melhor de 5", True, bg_color)
-        button_5_text_rect = button_5_text.get_rect(center=button_5_rect.center)
-        screen.blit(button_5_text, button_5_text_rect)
-        
+        screen.blit(button_5_text, button_5_text.get_rect(center=button_5_rect.center))
+
+        hist_color = pygame.Color("#ff6b6b") if hist_rect.collidepoint(mouse_pos) else prop_color
+        pygame.draw.rect(screen, hist_color, hist_rect)
+        pygame.draw.rect(screen, prop_color, hist_rect, 3)
+        hist_text = font_info.render("Histórico", True, bg_color)
+        screen.blit(hist_text, hist_text.get_rect(center=hist_rect.center))
+
         pygame.display.update()
-    
+
     return selecionado
 
 #Exibe a tela de resultado final da série
@@ -124,7 +165,6 @@ def run():
     # Exibir tela de seleção de modo
     modo = tela_selecao_modo(screen, screen_width, screen_height)
     
-    # Calcular limite de vitórias baseado no modo
     vitoria_limite = 2 if modo == 3 else 3
     
     score_p1 = 0
@@ -229,5 +269,6 @@ def run():
         clock.tick(fps)
     
     vencedor = 1 if score_p1 >= vitoria_limite else 2
+    salvar_partida(vencedor, score_p1, score_p2, modo)
     tela_resultado_final(screen, screen_width, screen_height, vencedor)
     pygame.quit()
