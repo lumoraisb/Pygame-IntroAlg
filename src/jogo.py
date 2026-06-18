@@ -117,42 +117,62 @@ def tela_selecao_modo(screen, screen_width, screen_height):
 
     return selecionado
 
-#Exibe a tela de resultado final da série
+#exibe a tela de resultado final e retorna "menu" ou "sair"
 def tela_resultado_final(screen, screen_width, screen_height, vencedor):
     font_title = pygame.font.Font(None, 150)
-    font_info = pygame.font.Font(None, 80)
-    
+    font_vencedor = pygame.font.Font(None, 80)
+    font_button = pygame.font.Font(None, 50)
+
+    button_width, button_height = 280, 80
+    button_spacing = 80
+    button_y = screen_height // 2 + 100
+
+    menu_rect = pygame.Rect((screen_width // 2) - button_width - (button_spacing // 2), button_y, button_width, button_height)
+    sair_rect = pygame.Rect((screen_width // 2) + (button_spacing // 2), button_y, button_width, button_height)
+
     clock = pygame.time.Clock()
-    contador = 0
-    
+
     while True:
+        mouse_pos = pygame.mouse.get_pos()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                return
-        
-        # Desenhar tela de resultado
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                return "sair"
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if menu_rect.collidepoint(mouse_pos):
+                    return "menu"
+                elif sair_rect.collidepoint(mouse_pos):
+                    return "sair"
+
         screen.fill(bg_color)
-        
-        # Título
+
+        #título
         title_text = font_title.render("FIM DE JOGO", True, prop_color)
-        title_rect = title_text.get_rect(center=(screen_width//2, 300))
-        screen.blit(title_text, title_rect)
-        
-        # Vencedor
-        vencedor_text = font_info.render(f"Jogador {vencedor} venceu!", True, pygame.Color("#ff6b6b"))
-        vencedor_rect = vencedor_text.get_rect(center=(screen_width//2, 500))
-        screen.blit(vencedor_text, vencedor_rect)
-        
+        screen.blit(title_text, title_text.get_rect(center=(screen_width // 2, screen_height // 2 - 150)))
+
+        #vencedor
+        vencedor_text = font_vencedor.render(f"Jogador {vencedor} venceu!", True, pygame.Color("#ff6b6b"))
+        screen.blit(vencedor_text, vencedor_text.get_rect(center=(screen_width // 2, screen_height // 2)))
+
+        #botão menu
+        menu_color = pygame.Color("#ff6b6b") if menu_rect.collidepoint(mouse_pos) else prop_color
+        pygame.draw.rect(screen, menu_color, menu_rect)
+        pygame.draw.rect(screen, prop_color, menu_rect, 3)
+        menu_text = font_button.render("Menu inicial", True, bg_color)
+        screen.blit(menu_text, menu_text.get_rect(center=menu_rect.center))
+
+        #botão sair
+        sair_color = pygame.Color("#ff6b6b") if sair_rect.collidepoint(mouse_pos) else prop_color
+        pygame.draw.rect(screen, sair_color, sair_rect)
+        pygame.draw.rect(screen, prop_color, sair_rect, 3)
+        sair_text = font_button.render("Sair", True, bg_color)
+        screen.blit(sair_text, sair_text.get_rect(center=sair_rect.center))
+
         pygame.display.update()
         clock.tick(fps)
-        contador += 1
-        
-        # Encerrar automaticamente após 3 segundos (180 frames a 60 FPS)
-        if contador >= 180:
-            return
 
 
 def run():
@@ -270,5 +290,10 @@ def run():
     
     vencedor = 1 if score_p1 >= vitoria_limite else 2
     salvar_partida(vencedor, score_p1, score_p2, modo)
-    tela_resultado_final(screen, screen_width, screen_height, vencedor)
-    pygame.quit()
+    acao = tela_resultado_final(screen, screen_width, screen_height, vencedor)
+
+    #volta ao menu ou encerra o jogo conforme a escolha do jogador
+    if acao == "menu":
+        run()
+    else:
+        pygame.quit()
