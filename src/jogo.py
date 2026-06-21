@@ -3,7 +3,7 @@ from pygame import gfxdraw
 
 from src.config import bg_color, prop_color, ball_radius, player_width, player_height, ball_speed, player_speed, fps
 from src.funcoes import inverter, bateu_em_cima_ou_embaixo, bateu_nas_laterais, limitar_jogador, bateu_no_jogador
-from src.dados import salvar_partida, carregar_historico
+from src.dados import salvar_partida, carregar_historico, apagar_historico
 
 
 #exibe as últimas 10 partidas salvas
@@ -11,18 +11,30 @@ def tela_historico(screen, screen_width, screen_height):
     font_title = pygame.font.Font(None, 80)
     font_item = pygame.font.Font(None, 45)
     font_info = pygame.font.Font(None, 40)
+    font_button = pygame.font.Font(None, 40)
     clock = pygame.time.Clock()
+
+    #botão de apagar histórico
+    apagar_rect = pygame.Rect(screen_width // 2 - 130, screen_height - 120, 260, 55)
 
     #carrega as últimas 10 partidas do arquivo de histórico
     partidas = carregar_historico()
 
     while True:
+        mouse_pos = pygame.mouse.get_pos()
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
-            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            if event.type == pygame.KEYDOWN:
                 return
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if apagar_rect.collidepoint(mouse_pos):
+                    apagar_historico()
+                    partidas = []
+                else:
+                    return
 
         screen.fill(bg_color)
 
@@ -38,8 +50,15 @@ def tela_historico(screen, screen_width, screen_height):
                 texto = font_item.render(linha, True, prop_color)
                 screen.blit(texto, texto.get_rect(center=(screen_width // 2, 200 + i * 55)))
 
-        voltar = font_info.render("Pressione qualquer tecla para voltar", True, pygame.Color("#ff6b6b"))
-        screen.blit(voltar, voltar.get_rect(center=(screen_width // 2, screen_height - 60)))
+        #botão apagar histórico
+        apagar_color = pygame.Color("#ff6b6b") if apagar_rect.collidepoint(mouse_pos) else prop_color
+        pygame.draw.rect(screen, apagar_color, apagar_rect)
+        pygame.draw.rect(screen, prop_color, apagar_rect, 3)
+        apagar_text = font_button.render("Apagar histórico", True, bg_color)
+        screen.blit(apagar_text, apagar_text.get_rect(center=apagar_rect.center))
+
+        voltar = font_info.render("Clique fora ou pressione tecla para voltar", True, prop_color)
+        screen.blit(voltar, voltar.get_rect(center=(screen_width // 2, screen_height - 50)))
 
         pygame.display.update()
         clock.tick(fps)
@@ -245,9 +264,11 @@ def run():
             ball.x += ball_speed_x
             ball.y += ball_speed_y
 
-            #Quando a bola bater em alguma extremidade ela ricocheteia 
+            #Quando a bola bater em alguma extremidade ela ricocheteia e aumenta a velocidade
             if bateu_em_cima_ou_embaixo(ball.top, ball.bottom, screen_height):
                 ball_speed_y = inverter(ball_speed_y)
+                ball_speed_y += 1 if ball_speed_y > 0 else -1
+                ball_speed_x += 1 if ball_speed_x > 0 else -1
             
             if ball.left <= 0:
                 score_p2 += 1

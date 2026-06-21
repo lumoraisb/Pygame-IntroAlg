@@ -1,6 +1,0 @@
-Jogador 1 venceu | 2x1 | Melhor de 3
-Jogador 1 venceu | 2x1 | Melhor de 3
-Jogador 1 venceu | 3x1 | Melhor de 5
-Jogador 1 venceu | 2x1 | Melhor de 3
-Jogador 2 venceu | 1x3 | Melhor de 5
-Jogador 2 venceu | 1x2 | Melhor de 3

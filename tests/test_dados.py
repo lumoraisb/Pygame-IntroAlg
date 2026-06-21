@@ -1,29 +1,28 @@
-import os
-import tempfile
+import json
 import pytest
 
-from src.dados import salvar_partida, carregar_historico, RANKING_PATH
+from src.dados import salvar_partida, carregar_historico
 
 
 @pytest.fixture
 def arquivo_temporario(monkeypatch, tmp_path):
     #redireciona o caminho do ranking para um arquivo temporário durante os testes
-    caminho = tmp_path / "ranking.txt"
+    caminho = tmp_path / "ranking.json"
     monkeypatch.setattr("src.dados.RANKING_PATH", str(caminho))
     return caminho
 
 
 def test_salvar_partida(arquivo_temporario):
     salvar_partida(1, 2, 0, 3)
-    conteudo = arquivo_temporario.read_text()
-    assert "Jogador 1 venceu | 2x0 | Melhor de 3" in conteudo
+    partidas = json.loads(arquivo_temporario.read_text())
+    assert partidas[0] == {"vencedor": 1, "score_p1": 2, "score_p2": 0, "modo": 3}
 
 
 def test_salvar_multiplas_partidas(arquivo_temporario):
     salvar_partida(1, 2, 1, 3)
     salvar_partida(2, 1, 3, 5)
-    linhas = arquivo_temporario.read_text().strip().split("\n")
-    assert len(linhas) == 2
+    partidas = json.loads(arquivo_temporario.read_text())
+    assert len(partidas) == 2
 
 
 def test_carregar_historico_vazio(arquivo_temporario):
@@ -33,7 +32,7 @@ def test_carregar_historico_vazio(arquivo_temporario):
 
 def test_carregar_historico_sem_arquivo(monkeypatch, tmp_path):
     #arquivo não existe
-    monkeypatch.setattr("src.dados.RANKING_PATH", str(tmp_path / "inexistente.txt"))
+    monkeypatch.setattr("src.dados.RANKING_PATH", str(tmp_path / "inexistente.json"))
     assert carregar_historico() == []
 
 
